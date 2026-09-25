@@ -97,17 +97,36 @@ str_detect(spot_smaller$subgenre, "pop")
 ```
 
 
-str_view() : input is a column and something to find, the output is a list with the matches
 
-str_subset() : useful for printing matches to the console 
-str_detect() : useful when working within a tibble
+str_view: the input is a column and something to look for and the output is a list showing the matches
 
+typeof: the input is a variable (in this case a column using str_view) and the output is the type of variable that the column is
+
+class: the input is a function (in this case str_view) and the output is the package and function
+
+match = NA: shows all of output in addition to matches
+
+html = TRUE: shows output as HTML
+
+str_subset: input is column and something that must be true and output is the filtered results
+
+str_detect: input is a column and something to match and the ouput is TRUE or FALSE depending on if the match applies
 
 
 
 2.  Use str_detect to print the rows of the spot_smaller tibble
     containing songs that have "pop" in the subgenre. (i.e. make a new
     tibble with fewer rows)
+    
+
+
+```{r}
+spot_smaller |>
+filter(str_detect(spot_smaller$subgenre, "pop"))
+```
+
+    
+    
 
 3.  Find the mean song title length for songs with "pop" in the subgenre
     and songs without "pop" in the subgenre.
@@ -136,6 +155,19 @@ Producing a table like this would be SUPER great (hint: `ifelse()`):
 2 Genre without pop              18.6
 ```
 
+
+
+
+```{r}
+spot_smaller |>
+mutate(sub_pop = str_detect(subgenre, "pop")) |>
+group_by(sub_pop) |>
+summarise( mean_title_length = mean(str_length(title)))
+```
+
+
+
+
 4.  In the bigspotify dataset, find the proportion of songs which
     contain "love" in the title (track_name) by playlist_genre.
 
@@ -148,6 +180,16 @@ bigspotify <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience
 bigspotify
 ```
 
+
+
+```{r}
+bigspotify |>
+filter(!is.na(track_name)) |>
+mutate(title_lower = str_to_lower(track_name),
+love = str_detect(title_lower, "love")) |>
+group_by(playlist_genre) |>
+summarise(prop_love = mean(love))
+```
 
 
 
@@ -199,9 +241,12 @@ str_view(words, "^.{7}")
 str_view(words, "^[aeiou]")
 str_view(words, "[^e]ed$")
 str_view(words, "^y")
+str_view(words, "q(?!u)")
 ```
 
 
+
+There are no words where q is not followed by u
 
 
 
@@ -258,6 +303,10 @@ bigspotify |>
 ```{r}
 bigspotify |>
   count(str_detect(track_name, "\\$\\d"))
+
+bigspotify |>
+filter(str_detect(track_name, "\\$\\d")) |>
+select(track_name, track_artist)
 ```
 
 
@@ -303,13 +352,32 @@ str_view(spot_smaller$album_name, "([A-Z]\\.?){2,}")
 9.  Create some strings that satisfy these regular expressions and
     explain.
 
--   `"^.*$"`
--   `"\{.+\}"`
+
+-   `"^.*$"` Le because the expression means any number of characters
+
+
+
+-`"\{.+\}"` {Hello}, because the expression mean, starts with { then anything and ends with
+
+
 
 10. Create regular expressions to find all `stringr::words` that:
 
 -   Start with three consonants.
+
+
+"{3}"
+
+
 -   Have two or more vowel-consonant pairs in a row.
+
+
+
+"([aeiou][^aeiou]{2,}"
+
+
+
+
 
 ## Useful functions for handling patterns
 
@@ -330,6 +398,18 @@ spot_smaller |>
 
 11. In the spot_smaller dataset, how many words are in each title?
     (hint: `\\b`)
+    
+
+
+```{r}
+spot_smaller |>
+mutate(num_words = str_count(title, "\\b[^ ]+\\b")) |>
+select(title, num_words)
+```
+
+
+    
+    
 
 12. In the spot_smaller dataset, extract the first word from every
     title. Show how you would print out these words as a vector and how
@@ -340,6 +420,17 @@ spot_smaller |>
 # [1] "Hear"      "Run"       "Formation" "7/11"      "My"        "It's"     
 # [7] "Poetic"    "A.D.H.D"   "Ya"        "Runnin"   
 ```
+
+
+
+```{r}
+str_extract(spot_smaller$title,"^[^ ]+")
+
+```
+
+
+
+
 
 Then this:
 
@@ -359,6 +450,17 @@ Then this:
 #10 Runnin (with A$AP Rocky, A$AP Ferg & Nicki Minaj) Runnin    
 ```
 
+
+
+```{r}
+spot_smaller |>
+mutate( first_word = str_extract(title,"^[^ ]+")) |>
+select(title,first_word)
+```
+
+
+
+
 13. Which decades are popular for playlist_names? Using the bigspotify
     dataset, try doing each of these steps one at a time!
 
@@ -368,6 +470,25 @@ Then this:
 -   use count to find how many playlists include each decade
 -   what if you include both "80's" and "80s"?
 -   how can you count "80's" and "80s" together in your final tibble?
+
+
+
+```{r}
+bigspotify |>
+distinct(playlist_name) |>
+filter(str_detect(playlist_name, "0'?s")) |>
+mutate(
+decade = str_extract(playlist_name, "\\d0'?s"),
+decade = str_replace(decade, "'", "")
+) |>
+count(decade)
+```
+
+
+
+
+
+
 
 ## Grouping and backreferences
 
@@ -403,16 +524,62 @@ str_view(x1, "(.)(.)(.)\\1\\2\\3")
 
 Which words in `stringr::words` match each expression?
 
+
+```{r}
+str_subset(words, "(.)\\1\\1")
+
+str_subset(words, "(.)(.)(.).*\\3\\2\\1")
+```
+
+
+
+
+
 15. Construct a regular expression to match words in `stringr::words`
     that contain a repeated pair of letters (e.g. “church” contains “ch”
     repeated twice) but *not* match repeated pairs of numbers (e.g.
     507-786-3861).
+    
+
+
+```{r}
+str_subset(words, "([a-z])([a-z]).*\\1\\2")
+```
+
+
+  
+    
+    
 
 16. Reformat the album_release_date variable in spot_smaller so that it
     is MM-DD-YYYY instead of YYYY-MM-DD. (Hint: str_replace().)
+    
+    
+
+```{r}
+spot_smaller |>
+mutate(
+album_release_date = str_replace(
+album_release_date,
+"(....)-(..)-(..)",
+"\\2-\\3-\\1"
+)
+)
+```
+
+
+
+    
+    
 
 17. BEFORE RUNNING IT, explain to your partner(s) what the following R
     chunk will do:
+    
+    
+    
+The chunk takes each sentence and switches the second and third words, then displays the first five sentences.
+    
+    
 
 ```{r}
 sentences |> 

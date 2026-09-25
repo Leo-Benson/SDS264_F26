@@ -1,0 +1,170 @@
+---
+title: "Strings: Extra Practice (Part 3)"
+format:
+  html: default
+editor_options: 
+  chunk_output_type: console
+---
+  
+You can download this .qmd file from [here](https://github.com/proback/264_fall_2026/blob/main/04_strings_part3.qmd).  Just hit the Download Raw File button.
+
+```{r}
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(rvest)
+library(httr)
+```
+
+
+## On Your Own - Extra practice with strings and regular expressions
+
+18. Produce an R string which the regular expression represented by `"\\..\\..\\.."` matches.  In other words, find a string `y` below that produces a TRUE in `str_detect`.
+
+
+```{r}
+y <- ".a.b.c"
+str_detect(y, "\\..\\..\\..")
+```
+
+
+
+
+19. What words in `stringr::words` have the highest number of vowels? What words have the highest proportion of vowels? (Hint: what is the denominator?)  Figure this out using the tidyverse and piping, starting with `as_tibble(words) |>`.
+
+
+
+```{r}
+# Create a tibble with the number and proportion of vowels
+word_vowels <- as_tibble(words) |>
+mutate(
+num_vowels = str_count(value, "[aeiou]"),
+word_length = str_length(value),
+prop_vowels = num_vowels / word_length
+)
+word_vowels |>
+slice_max(num_vowels)
+
+word_vowels |>
+slice_max(prop_vowels)
+```
+
+
+
+
+
+20. *Carefully* explain what the code below does, both line by line and in general terms.
+
+```{r}
+temp <- str_replace_all(words, "^([A-Za-z])(.*)([a-z])$", "\\3\\2\\1")
+as_tibble(words) |>
+  semi_join(as_tibble(temp)) |>
+  print(n = Inf)
+```
+
+
+
+The first part of the code swaps the first and last letters, while everything in the middle stays where it is. The second part takes the original words vector and turns it into a tibble. The semi_join keeps original words that can also be found somewhere in temp. The last line prints all the resulting rows. Overall, It swaps the first and last letters of every word in stringr::words, then finds and prints all original words that appear among those swapped results.
+
+
+
+
+## Coco and Metacritic
+
+We will check out the Metacritic page for the 2017 movie Coco, scrape information from that page (we'll get into web scraping in a few weeks!), clean it up into a usable format, and answer some questions using strings and regular expressions.
+
+```{r}
+# eval: false
+
+#install.packages("remotes")
+#remotes::install_github("dmi3kno/polite")
+library(polite)
+
+coco <- "https://www.metacritic.com/movie/coco-2017/" |>
+  bow() |> 
+  scrape()
+
+top_reviews <- 
+  "https://www.metacritic.com/movie/coco-2017/critic-reviews/" |> 
+  bow() |> 
+  scrape()
+top_reviews <- html_nodes(top_reviews, ".leading-normal")
+top_reviews <- html_text(top_reviews)
+
+user_reviews <- 
+  "https://www.metacritic.com/movie/coco-2017/user-reviews" |> 
+  bow() |> 
+  scrape()
+user_reviews <- html_nodes(user_reviews, ".leading-normal")
+user_reviews <- html_text(user_reviews)
+
+users <- read_csv("https://proback.github.io/264_fall_2026/Data/users.csv")
+critics <- read_csv("https://proback.github.io/264_fall_2026/Data/critics.csv")
+```
+
+
+21. `top_reviews` is a character vector containing the 10 most recent critic reviews for Coco, while `user_reviews` is a character vector with the 50 most recent user reviews (although many are truncated).
+
+a) Print out the user reviews where the reviewer mentions "emotion" or "cry".  Think about various forms ("cried", "emotional", etc.)  You may want to turn reviews to all lower case before searching for matches.
+
+
+```{r}
+user_reviews |>
+str_to_lower() |>
+str_subset("emotion|cry|cried")
+
+```
+
+
+
+
+
+
+b) In critic reviews, replace all instances where "Pixar" is used with its full name: "Pixar Animation Studios".
+
+
+
+```{r}
+user_reviews |>
+str_to_lower() |>
+str_subset("emotion|cry|cried")
+```
+
+
+
+
+
+c) Find out how many times each user uses "I" in their review.  Remember that it could be used as upper or lower case, at the beginning, middle, or end of a sentence, etc.
+
+
+
+
+```{r}
+user_reviews |>
+str_to_lower() |>
+str_subset("emotion|cry|cried")
+```
+
+
+
+
+d) Do critics or users have more complex reviews, as measured by average number of commas used?  Be sure your code weeds out commas used in numbers, such as "12,345".
+
+
+
+
+```{r}
+user_reviews |>
+str_to_lower() |>
+str_subset("emotion|cry|cried")
+
+user_reviews |>
+str_to_lower() |>
+str_subset("emotion|cry|cried")
+```
+
+
+Users have more complex reviews based on the average number of commas used. User reviews contain an average of 3.34 commas per review, compared with 2.2 commas per critic review.
+
+
