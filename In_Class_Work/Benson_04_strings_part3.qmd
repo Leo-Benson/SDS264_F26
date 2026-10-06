@@ -126,9 +126,11 @@ b) In critic reviews, replace all instances where "Pixar" is used with its full 
 
 
 ```{r}
-user_reviews |>
-str_to_lower() |>
-str_subset("emotion|cry|cried")
+top_reviews |>
+str_replace_all(
+"Pixar",
+"Pixar Animation Studios"
+)
 ```
 
 
@@ -143,7 +145,7 @@ c) Find out how many times each user uses "I" in their review.  Remember that it
 ```{r}
 user_reviews |>
 str_to_lower() |>
-str_subset("emotion|cry|cried")
+str_count("\\bi\\b")
 ```
 
 
@@ -155,13 +157,15 @@ d) Do critics or users have more complex reviews, as measured by average number 
 
 
 ```{r}
-user_reviews |>
-str_to_lower() |>
-str_subset("emotion|cry|cried")
+top_reviews |>
+str_remove_all("(\\d),(\\d)") |>
+str_count(",") |>
+mean()
 
 user_reviews |>
-str_to_lower() |>
-str_subset("emotion|cry|cried")
+str_remove_all("(\\d),(\\d)") |>
+str_count(",") |>
+mean()
 ```
 
 

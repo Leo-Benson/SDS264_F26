@@ -1,7 +1,7 @@
 ---
 title: "Strings: In-class Exercises (Part 2)"
 format:
-  html: default
+  pdf: default
 editor_options: 
   chunk_output_type: console
 editor: 
@@ -84,11 +84,11 @@ str_detect() : useful when working within a tibble
 1.  Identify the input type and output type for each of these examples:
 
 ```{r}
-str_view(spot_smaller$subgenre, "pop")
+#str_view(spot_smaller$subgenre, "pop")
 typeof(str_view(spot_smaller$subgenre, "pop"))
 class(str_view(spot_smaller$subgenre, "pop"))
 
-str_view(spot_smaller$subgenre, "pop", match = NA)
+#str_view(spot_smaller$subgenre, "pop", match = NA)
 str_view(spot_smaller$subgenre, "pop", html = TRUE)
 
 str_subset(spot_smaller$subgenre, "pop")
@@ -241,7 +241,7 @@ str_view(words, "^.{7}")
 str_view(words, "^[aeiou]")
 str_view(words, "[^e]ed$")
 str_view(words, "^y")
-str_view(words, "q(?!u)")
+str_view(words, "q[^u]")
 ```
 
 
