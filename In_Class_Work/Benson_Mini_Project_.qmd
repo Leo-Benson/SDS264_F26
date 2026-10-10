@@ -1,0 +1,404 @@
+---
+title: "Mini Project #1"
+subtitle: "Leo Benson"
+format: pdf
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: 72
+---
+```{r, echo = FALSE, include = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(tidytext)
+library(textdata)
+library(wordcloud)
+library(NLP)
+library(viridis)
+library(ggthemes)
+library(gutenbergr)
+library(readr)
+library(maps)
+
+headline_data <- read_csv("abcnews-date-text.csv")
+
+```
+
+# Introduction
+
+
+
+Stories in the news have an extreme range of topics. From hopeful
+accounts of success to the complexity of current global events, media
+intake of the news is constant through social media and news companies.
+Headlines capture the attention of consumers and categorize the news
+story, but what exactly do these one sentence advertisers have to say?
+The Kaggle dataset "A Million News Headlines" contains headlines from
+the Australian Broadcasting Corporation (ABC) from 2003 to 2021. ABC is
+a reputable Australian news source that captures stories from across the
+world, and the dataset can be used to perform text analysis of headlines
+over time.
+
+
+I decided to focus on the topics and sentiment of ABC news over time to
+get a comprehensive understanding of news topics from a global
+perspective. I approached the analysis with the following questions in
+mind:
+
+
+1.  What topics are most common in ABC news headlines?
+
+2.  How has the sentiment of ABC news headlines changed over time?
+
+
+
+
+# Question 1: What Topics Are Most Common?
+
+
+
+After tidying the data, I began by simply observing the most common word
+occurrences, ruling out common stop words.
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+#creating token data set and making publish date a time variable
+
+headline_tidy <- headline_data  |>
+   mutate(story = row_number()) |> #create column to represent different headlines
+   unnest_tokens(word, headline_text, token = "words") |> #tokenize data
+   mutate(                                            
+    publish_date = as.character(publish_date), #change publish_date column to date format
+    publish_date = parse_datetime(publish_date, "%Y%m%d")
+   )
+```
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4, fig.height = 3}
+
+#retrieving stop words data set to remove them from word counts
+
+smart_stopwords <- get_stopwords(source = "smart")
+
+#creating graph of most common words
+
+headline_tidy |>
+  anti_join(smart_stopwords) |> #remove stop words
+  count(word, sort = TRUE) |> #count words and sort them by occurrence
+  filter(word != "NA") |> #filter out NA values
+  slice_max(n, n = 20) |> #slice top 20 most common words and graph
+  ggplot(aes(fct_reorder(word, n), n)) +
+  geom_col(fill = "blue") +
+  coord_flip() +
+  labs(
+    title = "Most Common Words", 
+    y = "Number of Occurrences", 
+    x = ""
+  )
+```
+
+
+
+Police and man were the most common words by a decent amount. Looking
+down the list, two other things stood out to me. First, the negativity
+of the words. Common words like "fire," "death," "crash," and "charged"
+highlight the conflict and disaster represented in the news. Second,
+many of the most popular words were different mentions of Australia:
+sensible considering that ABC is an Australian news site. To create a
+more comprehensive visualization, I created a word cloud that removed
+the different mentions of Australia.
+
+
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 4, fig.height = 3}
+
+#creating two column data frame that does not include stop words or different mentions of Australia
+
+headline_wordcloud <- headline_tidy |>
+  anti_join(stop_words) |> #remove stop words 
+  count(word) |>
+  filter(!str_detect(word, "(australia(s|n)?s?)|sydney")) |> #str function and regular expression 1 to remove the words "australia, australias, australian, australians, and sydney
+  filter(word != "NA") |>
+  arrange(desc(n)) |>
+  slice_head(n = 80) |> #create data frame with 20 most common words and their counts
+  data.frame()
+
+  
+
+#inserting data frame into wordcloud two to create visualization
+
+wordcloud(
+  words = headline_wordcloud$word, 
+  freq = headline_wordcloud$n, 
+  max.words = 200, 
+  random.order = FALSE, 
+  rot.per = 0.35,
+  scale = c(3.5, 0.3),
+  colors = brewer.pal(6, "Dark2"))
+
+
+```
+
+
+
+Without the presence of Australia in the most common words, it is even
+more clear the abundance of awful events that appear commonly in the
+news. Perhaps negative events are what people really want to know about. However, one word is not necessarily representative of an entire topic. To better understand what specific topics are most common in ABC headlines, I examined the most common two word combinations.
+
+
+
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 4, fig.height = 3}
+
+#create new dataset with tokenized two word combinations
+
+headline_ngram <- headline_data |> 
+  unnest_tokens(bigram, headline_text, token = "ngrams", n = 2) |> 
+  filter(bigram != "NA")
+
+headline_ngram_filtered <- headline_ngram |> #create filtered dataset removing stop words
+  separate(bigram, c("word1", "word2"), sep = " ") |> #separate word one and two
+  filter(!word1 %in% stop_words$word, 
+         !word2 %in% stop_words$word) #filter to not include stop words in either word one or two
+
+headline_ngram_filtered |> 
+  count(word1, word2) |> #count different two word combinations
+  mutate(topic = str_c(word1, word2, sep = " ")) |> #str function 2 to create new column that collapses word 1 and word 2
+  slice_max(order_by = n, n = 10) |> #slice ten most common two word phrases
+  ggplot(aes(fct_reorder(topic, n), n)) + #plot in order 
+  geom_col(fill = "blue") +
+  coord_flip() +
+  labs(
+    y = "Number of Occurrences", 
+    x = " ",
+    title = "Most Common Bigrams"
+  )
+```
+
+
+
+
+
+The bigram revealed that beyond the topics about gold coast Australia and country hour (a popular Australian radio program hosted by ABC), police, politics, and disaster were still the most common headline topics. Furthermore, it struck me how outside of the two Australian bigrams, the topics in ABC headlines focus on global issues. The presence of challenges such as  covid 19, climate change, and mental health reveal what large-scale issues tend to make headlines. Interestingly, for a global news site like ABC, United States politics and global affairs seem to be a popular topic with Donald Trump as the fifth most popular bigram. 
+
+
+Next, considering the wide scope of ABC, I moved my focus to the most common countries mentioned in the headlines to better inform my analysis of common topics.
+
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+country_list <- map_data("world")$region |> unique() #import data from map package containing country names
+
+countries <- data.frame(country = country_list, stringsAsFactors = FALSE) |> #create data frame with column of all countries
+  mutate(word = str_to_lower(country)) #str_function 1 to make all countries in lower case
+```
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4, fig.height = 3}
+
+headline_tidy |> #using countries data frame to count number of occurrences for each country
+  inner_join(countries) |>
+  count(country, sort = TRUE) |>
+  slice_max(n, n = 10) |>
+  ggplot(aes(fct_reorder(country, n), n)) + #plotting count in order
+    geom_col(fill = "blue") +
+    coord_flip() +
+    labs(
+    title = "Most Common Countries", 
+    y = "Number of Occurrences", 
+    x = ""
+  )
+  
+```
+
+
+
+
+
+Despite talks of United States politics, it was not even in the top ten most mentioned countries. ABC's home country had the most occurrences of course, and China and Iraq had considerable numbers. I wondered whether these countries had some foreign relations with Australia that caused an increase their appearances in ABC headlines. For a global news source based in Australia, what kind of topics does ABC discuss relating to their home country? To answer this question, I decided to focus on the most common words coming right after a mention of Australia.
+
+
+
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4, fig.height = 3}
+
+
+australia_sentiment <- headline_data |>
+filter(str_detect(headline_text, "australia")) |> #str function 2 to filter original headlines data set to include headlines containing Australia
+  mutate(australia_words = str_extract(headline_text, "australia(s|n)?(s?)\\s+\\w+"), #str function 3 and regular expression 1 to extract mentions of Australia in different forms and one additional word
+         publish_date = as.character(publish_date), #parse date into correct format
+         publish_date = parse_datetime(publish_date, "%Y%m%d"),
+         word = str_extract(australia_words, "\\s\\w+$") #str function and regular expression 2 to extract second word in two word phrase containing Australia
+         ) |>
+  select(publish_date, australia_words, word)
+
+australia_sentiment |> #sort words coming after Australia- not including stop words
+  drop_na() |>
+  anti_join(stop_words) |>
+  count(word, sort = TRUE) |>
+  slice_max(n, n = 10) |>
+  ggplot(aes(fct_reorder(word, n), n)) + #plotting count in order
+    geom_col(fill = "blue") +
+    coord_flip() +
+    labs(
+    title = "Most Common Words After Australia", 
+    y = "Number of Occurrences", 
+    x = ""
+  )
+  
+```
+
+
+
+Words like "open," and "to," and "vs" portray how politics and international relations are the forefront topics regarding Australia. "Open" being the most common word following a mention of Australia also could allude to more positive news. Maybe the government is open to policy that benefits locals, or partnership with another country. Additionally, supporting my hypothesis that countries were mentioned based on their international relations with Australia, "vs," was the fourth most common word in the analysis. I suspect that the countries highlighted in the list by occurrence commonly appear after the "vs" or the "open" depending on their relationship with Australia.
+
+From the raw count of words alone, it is difficult to have a more comprehensive understanding of the true sentiment of the news. Also, with the massive range of publish years, sentiment has likely changed and cannot be fully mapped by analyzing the most common words. With these ideas in mind, I pivoted to answer my second question,
+
+
+
+# Question 2: How Has The Sentiment Changed Over Time?
+
+
+
+
+My analysis on the most common words in the headlines made it abundantly clear that there is a knack for negativity. But is it truly all that bad? Considering the presence of disaster in the news, I was curious to view a representation of the other side. What are the most common positive words that occur in ABC news headlines? To do so, I began to visualize the sentiment behind each word.
+
+
+
+
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+
+#import sentiment data
+
+bing_sentiments <- get_sentiments(lexicon = "bing")
+
+
+#plotting ten greatest occurrences for each word of negative and positive sentiment 
+
+headline_tidy |>
+  inner_join(bing_sentiments) |> #add positive and negative sentiments to data
+  count(sentiment, word, sort = TRUE) |> #count sentiments for each word
+  group_by(sentiment) |>
+  slice_max(n, n = 10) |> #slice ten most common occurrences for positive and negative sentiment
+  ungroup() |>
+  ggplot(
+    aes(x = fct_reorder(word, n), y = n, fill = sentiment) #plot in order
+    ) +
+    geom_col() +  
+    coord_flip() +
+    facet_wrap(~ sentiment, scales = "free") + #separate plots for positive and negative sentimeent and allow different scales
+  labs(
+    y = "Number of Occurrences", 
+    x = "",
+    title = "Ten Most Common Positive and Negative Words", 
+    fill = "Sentiment"
+   )
+```
+
+
+
+
+Looking on the bright side, maybe some news headlines are positive. With that being said, there are a few aspects of the ten most common positive words that could suggest otherwise. The differences in the scales of each graph shows that negative words are
+far more common than positive words. Out of the five greatest counts for the positive side, only one exceeds ten thousand occurrences, compared to three of the top five most popular negative words. Additionally, many of the positive words presumably have political connotations that are not necessarily something readers find as a good thing. "Win," "trump,", "boost," "support," "lead," and "appeal" could all be negative depending
+on the case, candidate, or policy being discussed.
+
+Considering that the news seemed overwhelmingly negative, I shifted to focus on sentiment in a holistic manner, analyzing entire sentences and even entire years of headlines.
+
+
+
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+
+#calculating and graphing the difference in positive and negative words for each distinct publish date
+
+headline_tidy |>
+  inner_join(bing_sentiments) |> #assign bing sentiment to each word 
+  group_by(publish_date) |>   
+  count(sentiment) |> #count positive and negative sentiments for each publish date
+  pivot_wider(        #pivot to create column for positive and negative sentiment counts
+    names_from = sentiment, 
+    values_from = n, 
+    values_fill = 0
+  ) |>
+  mutate(sentiment = positive - negative) |> #create column for difference in negative and positive sentiment
+  ggplot(aes(x = publish_date, y = sentiment)) + #plot sentiment over time
+    geom_jitter(alpha = 0.5) +
+    geom_hline(yintercept = 0, color = "red") + #create horizontal line at y = 0
+    geom_smooth(method = lm, se = FALSE) + #add smoother and labels
+    labs(x = "Publish Date", 
+         y = "Sentiment",
+         title = "Headline Sentiments by Publish Date Over Time",
+         subtitle = "Above Red Line is Positive Sentiment"
+    )
+```
+
+
+
+Plotting sentiment over time by publish date yielded some interesting results that helped inform my question. Nearly all of the publish days had negative sentiment, and therefore a greater number of negative words than positive words. While this has remained true over time, I was struck by the slight positive trend in sentiment over time. Although publish days have overwhelmingly negative sentiment, it appears to be less negative in more recent years. Curious by this trend, I then aimed to break up the sentiment even further to simplify the visualization. I wondered if the trend would differ if I focused on sentiment in entire years of headlines.
+
+
+
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+
+
+headline_tidy |>
+  inner_join(bing_sentiments) |>
+  mutate(year = str_extract(publish_date, "^\\d{4}")) |> #regular expression 3 to extract first four digits from publish date column- create column for year 
+  group_by(year) |>
+  count(sentiment) |> #count sentiments for each year
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) |> #pivot to create positive and negative sentiment column
+  mutate(sentiment = positive - negative) |> #create new column for the difference in negative and positive sentimented words each year
+  ggplot(aes(x = year, y = sentiment, group = 1)) + 
+    geom_point() +
+    geom_hline(yintercept = 0, color = "red") + #add horizontal line at y = 0
+    geom_smooth(se = FALSE) + #add smoother
+    scale_x_discrete(breaks = as.character(seq(2003, 2021, by = 2))) +
+    labs(
+         x = "Publish Year", 
+         y = "Sentiment",
+         title = "Headline Sentiments by Year Over Time",
+         subtitle = "Above Red Line is Positive Sentiment"
+    )
+```
+
+
+
+
+Grouping the headlines by year created an even more extreme change in sentiment over time. Again, the sentiment each year was overall negative, but recent years produced more positive sentiments. Observing sentiment by year also highlighted the extreme lows of 2008 and 2009. Perhaps the 2008 financial crisis contributed to the extra negative headlines. 
+
+
+
+# Conclusion:
+
+
+
+My text analysis of "A Million News Headlines" from Kaggle gave insight into my two questions of interest. Beginning with question one, I found that police, politics, and disaster were the most common topics in the headlines using individual word and bigram analysis. I then examined the global emphasis of ABC and found that countries with international relations to Australia are mentioned frequently, and that ABC may have a more positive tone when discussing home-country topics as opposed to world wide issues. These findings prompted my inquiry of question two where I found that while headlines have negative sentiment overall, they seem to be getting less negative over time. Calculating sentiment by year allowed me to examine this relationship based on global events, and the upturn was even more extreme. 
+
+Headlines do not tell the whole story, but my text analysis provides insight into what global news sites discuss and the negative sentiment behind them. I would be curious to dive deeper into how specific news topics have changed over time to gain a wider understanding of why sentiment has shifted. Furthermore, comparing ABC news headlines to other global news sources could highlight strategies that compel audiences in addition to differences between news companies from other countries. 
+
+The news is one of the most consumed aspects of media, and understanding the inner workings of how information spreads in our world is in everyone's best interest. In a world with countless issues, it is critical to inspect the information presented to us at first glance. Headlines draw us in, but their content and sentiment are just the beginning.
+
+
+
+
+## Sources + Alt Text For Graph "Headline Sentiments by Year Over Time"
+
+
+
+Data Source: https://www.kaggle.com/datasets/therohk/million-headlines 
+
+
+
+Alt Text:
+
+
+
+This is a scatter plot with a smoother showing ABC headline sentiments over time. Publish year is on the x axis and ranges from 2003 to 2021. Sentiment, the difference in number of positive and negatively labelled words, is on the y axis and ranges from -20,000 to 0. The scatter plot shows that over time sentiment has fluctuated but overall increased while remaining negative. From 2003 to 2009 there is a a decrease in sentiment then from 2009 on there is a positive linear relationship between sentiment and publish year. At the top of the graph, there is a horizontal red line indicating where the sentiment is zero and the points never exceed it.
+
+
+
+
+
+
