@@ -1,0 +1,498 @@
+---
+title: "R Tip of the Day"
+subtitle: "The leaflet package"
+author: "Leo Benson"
+date: "November, 2026"
+format:
+  revealjs: 
+    slide-number: true
+    chalkboard: 
+      buttons: true
+    preview-links: auto
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+library(leaflet)
+library(tidyverse)
+```
+
+
+
+## Basic Interactive Map {auto-animate=true}
+
+::: Incremental
+
+- Requires...
+
+
+
+
+:::
+
+
+::: {.fragment .fade-in}
+
+  - Leaflet function
+
+
+```{.r code-line-numbers="1"}
+leaflet() |>
+  addTiles()
+```
+
+
+:::
+
+
+
+::: {.fragment .fade-in}
+ 
+  - addTiles function
+
+
+```{.r code-line-numbers="2"}
+leaflet() |>
+  addTiles()
+```
+
+
+:::
+
+
+## Basic Interactive Map {auto-animate=true}
+
+
+
+```{r}
+leaflet() |>
+  addTiles()
+```
+
+
+
+## Adding Markers {auto-animate=true}
+
+
+- Specify latitude + longitude
+- Popup option allows for interactive name
+
+
+```{.r code-line-numbers="3-4"}
+leaflet() |>
+  addTiles() |>
+  addMarkers(lng = -93.182811, lat =  44.461883, popup = "Input coordinates to mark anything!")
+```
+
+
+
+## Adding Markers {auto-animate=true}
+
+
+
+```{r}
+leaflet() |>
+  addTiles() |>
+  addMarkers(lng = -93.182811, lat =  44.461883, popup = "Input coordinates to mark anything!")
+```
+
+
+
+## Setting View {auto-animate=true}
+
+
+- Specify location + zoom number to focus in...
+
+
+
+```{.r code-line-numbers="3"}
+leaflet() |>
+  addTiles() |>
+  setView(lng = -93.182811, lat =  44.461883, zoom = 20) |>
+  addMarkers(lng = -93.182811, lat =  44.461883, popup = "Set view to show any zoom distance!")
+ 
+```
+
+
+
+
+## Setting View {auto-animate=true}
+
+
+
+```{r}
+leaflet() |>
+  addTiles() |>
+  setView(lng = -93.182811, lat =  44.461883, zoom = 20) |>
+  addMarkers(lng = -93.182811, lat =  44.461883, popup = "Set view to show any zoom distance!")
+ 
+```
+
+
+
+## Setting View {auto-animate=true}
+
+
+- Or out!
+
+
+```{.r code-line-numbers="3"}
+leaflet() |>
+  addTiles() |>
+  setView(lng = -93.182811, lat =  44.461883, zoom = 5) |>
+  addMarkers(lng = -93.182811, lat =  44.461883, popup = "Set view to show any zoom distance!")
+ 
+```
+
+
+
+## Setting View {auto-animate=true}
+
+
+
+
+```{r}
+leaflet() |>
+  addTiles() |>
+  setView(lng = -93.182811, lat =  44.461883, zoom = 5) |>
+  addMarkers(lng = -93.182811, lat =  44.461883, popup = "Set view to show any zoom distance!")
+ 
+```
+
+
+
+
+
+
+
+## Changing Map Style {auto-animate=true}
+
+
+- Use addProviderTiles function to change map appearance
+
+
+
+```{.r code-line-numbers="4"}
+leaflet() |>
+  setView(lng = -93.182811, lat =  44.461883, zoom = 5) |>
+  addMarkers(lng = -93.182811, lat =  44.461883, popup = "Change map style using      addProviderTiles()!") |>
+ addProviderTiles(providers$OpenTopoMap)
+```
+
+
+
+
+## Changing Map Style {auto-animate=true}
+
+
+
+
+```{r}
+leaflet() |>
+  setView(lng = -93.182811, lat =  44.461883, zoom = 5) |>
+  addMarkers(lng = -93.182811, lat =  44.461883, popup = "Change map style using addProviderTiles()!") |>
+ addProviderTiles(providers$OpenTopoMap)
+```
+
+
+
+
+::: footer
+Possible Map Appearances!: [Leaflet Providers](https://leaflet-extras.github.io/leaflet-providers/preview/ )
+:::
+
+
+
+
+## Changing Map Style {auto-animate=true}
+
+
+
+```{r}
+leaflet() |>
+  setView(lng = -93.182811, lat =  44.461883, zoom = 12) |>
+  addMarkers(lng = -93.182811, lat =  44.461883, popup = "Change map style using addProviderTiles()!") |>
+ addProviderTiles(providers$Stadia.StamenWatercolor)
+```
+
+
+
+## Multiple Markers  {auto-animate=true}
+
+- Use c() function to show as many markers as you want!
+
+
+```{.r code-line-numbers="3"}
+leaflet() |>
+  addMarkers(
+    lng = c(-93.18184, -93.182811), lat = c(44.459161, 44.461883),
+    popup = c("Regents Hall", "Buntrock Hall")
+  ) |>
+  addProviderTiles(providers$OpenTopoMap) 
+```
+
+
+
+
+## Multiple Markers {auto-animate=true}
+
+
+
+
+```{r}
+leaflet() |>
+  addMarkers(
+    lng = c(-93.18184, -93.182811), lat = c(44.459161, 44.461883),
+    popup = c("Regents Hall", "Buntrock Hall")
+  ) |>
+  addProviderTiles(providers$OpenTopoMap) 
+```
+
+
+
+## Adding Shapes to Maps {auto-animate=true}
+
+
+- Easy to add circles, rectangles, or any shape you want!
+
+
+
+```{.r code-line-numbers="4-6"}
+leaflet() |>
+  addTiles() |>
+  setView(lng = -93.182811, lat =  44.461883, zoom = 30) |>
+addCircles(lng = -93.182811, lat =  44.461883, weight = 1,
+    radius = 30
+  )
+```
+
+
+
+## Adding Shapes to Maps {auto-animate=true}
+
+
+
+```{r}
+leaflet() |>
+  addTiles() |>
+  setView(lng = -93.182811, lat =  44.461883, zoom = 30) |>
+addCircles(lng = -93.182811, lat =  44.461883, weight = 1,
+    radius = 30
+  )
+```
+
+
+
+## Adding Shapes to Maps {auto-animate=true}
+
+
+- Easy to add circles, rectangles, or any shape you want!
+
+
+```{.r code-line-numbers="3-7"}
+leaflet() |> 
+  addTiles() |>
+  addRectangles(
+    lng1=-118.456554, lat1=34.078039,
+    lng2=-118.436383, lat2=34.062717,
+    fillColor = "transparent"
+  )
+```
+
+
+
+
+## Adding Shapes to Maps {auto-animate=true}
+
+
+
+
+```{r}
+leaflet() |> 
+  addTiles() |>
+  addRectangles(
+    lng1=-118.456554, lat1=34.078039,
+    lng2=-118.436383, lat2=34.062717,
+    fillColor = "transparent"
+  )
+```
+
+
+
+## Using Data With Leaflet {auto-animate=true}
+
+
+- Leaflet can use coordinate data with any factors you want
+- For example: 
+
+
+```{.r}
+colleges <- data.frame(
+  school = c(
+    "Carleton College",
+    "Macalester College",
+    "Gustavus Adolphus College",
+    "College of Saint Benedict",
+    "Concordia College"
+  ),
+  lat = c(44.4623, 44.9367, 44.3238, 45.5586, 46.8594),
+  long = c(-93.1547, -93.1699, -93.9758, -94.3190, -96.7656),
+  size = c(2107, 2068, 1852, 1356, 1910)
+)
+```
+
+
+```{r, echo = FALSE}
+colleges <- data.frame(
+  school = c(
+    "Carleton College",
+    "Macalester College",
+    "Gustavus Adolphus College",
+    "College of Saint Benedict",
+    "Concordia College"
+  ),
+  lat = c(44.4623, 44.9367, 44.3238, 45.5586, 46.8594),
+  long = c(-93.1547, -93.1699, -93.9758, -94.3190, -96.7656),
+  size = c(2107, 2068, 1852, 1356, 1910)
+)
+```
+
+
+
+## Using Data With Leaflet {auto-animate=true}
+
+
+- Leaflet can use coordinate data with any factors you want
+- For example: 
+
+
+
+```{.r}
+leaflet(colleges) |>
+  addTiles() |>
+  addMarkers(lng = ~long, lat = ~lat, popup = ~school)
+```
+
+
+
+## Using Data With Leaflet {auto-animate=true}
+
+
+
+
+```{r}
+leaflet(colleges) |>
+  addTiles() |>
+  addMarkers(lng = ~long, lat = ~lat, popup = ~school)
+```
+
+
+
+## Using Data With Leaflet {auto-animate=true}
+
+
+- You can even map variables to shapes corresponding to a certain variable
+
+
+
+```{.r}
+# Show a circle at each position
+leaflet(data = colleges) |>
+   addTiles() |>
+   addCircleMarkers(~long, ~lat , popup = ~school, radius = ~size*0.01)
+```
+
+
+
+
+## Using Data With Leaflet {auto-animate=true}
+
+
+
+
+```{r}
+# Show a circle at each position
+leaflet(data = colleges) |>
+   addTiles() |>
+   addCircleMarkers(~long, ~lat , popup = ~school, radius = ~size*0.01)
+```
+
+
+
+## Using Data With Leaflet {auto-animate=true}
+
+
+- Or you can map variables to a color palette and create a legend
+
+
+
+```{.r}
+  leaflet(colleges) |>
+  addTiles() |>
+  addCircleMarkers(
+    ~long, ~lat,
+    popup = ~school,
+    radius = 10,
+    color = ~colorNumeric(
+      palette = "viridis",
+      domain = size
+    )(size),
+    fillOpacity = 0.8
+  ) |>
+  addLegend(
+    position = "bottomright",
+    pal = colorNumeric(
+      palette = "viridis",
+      domain = colleges$size
+    ),
+    values = ~size,
+    title = "Student Population",
+    opacity = 1
+  )
+```
+
+
+
+
+## Using Data With Leaflet {auto-animate=true}
+
+
+
+```{r}
+  leaflet(colleges) |>
+  addTiles() |>
+  addCircleMarkers(
+    ~long, ~lat,
+    popup = ~school,
+    radius = 10,
+    color = ~colorNumeric(
+      palette = "viridis",
+      domain = size
+    )(size),
+    fillOpacity = 0.8
+  ) |>
+  addLegend(
+    position = "bottomright",
+    pal = colorNumeric(
+      palette = "viridis",
+      domain = colleges$size
+    ),
+    values = ~size,
+    title = "Student Population",
+    opacity = 1
+  )
+```
+
+
+
+## Thank you for listening! {auto-animate=true, .center}
+
+
+
+
+::: footer
+[More info on leaflet](https://r-graph-gallery.com/package/leaflet.html)
+:::
+
