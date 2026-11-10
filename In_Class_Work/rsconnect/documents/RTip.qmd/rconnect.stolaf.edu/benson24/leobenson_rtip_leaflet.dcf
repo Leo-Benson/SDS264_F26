@@ -1,0 +1,14 @@
+name: leobenson_rtip_leaflet
+title: LeoBenson_RTip_leaflet
+username: benson24
+account: benson24
+server: rconnect.stolaf.edu
+hostUrl: https://rconnect.stolaf.edu/__api__
+appId: 1505
+bundleId: 4732
+url: https://rconnect.stolaf.edu/content/b20c7a13-a1de-4353-9714-6e040c90b7cb/
+version: 1
+quarto_version: 1.10.19
+quarto_engines: knitr
+asMultiple: FALSE
+asStatic: FALSE
